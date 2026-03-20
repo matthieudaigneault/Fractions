@@ -3,155 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Labo de Fractions d'André</title>
+    <title>Labo de Fractions Interactif</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #eceff1; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); width: 95%; max-width: 500px; text-align: center; }
+        :root { --blue: #2196F3; --orange: #FF9800; --green: #4CAF50; --red: #f44336; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; padding: 10px; color: #333; }
+        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 95%; max-width: 650px; text-align: center; }
         
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab { flex: 1; padding: 10px; background: #cfd8dc; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; }
-        .tab.active { background: #2196F3; color: white; }
+        h1 { color: var(--blue); margin-bottom: 5px; }
+        .sub { margin-bottom: 20px; font-style: italic; color: #666; }
 
-        .fraction-row { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; }
-        .input-group { display: flex; flex-direction: column; align-items: center; }
-        input { width: 50px; padding: 8px; font-size: 1.2rem; text-align: center; border: 2px solid #ddd; border-radius: 8px; }
-        .line { width: 100%; height: 3px; background: #37474f; margin: 5px 0; }
-        
-        button.validate { background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        
-        .viz-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px; }
-        canvas { background: #fdfdfd; border-radius: 50%; border: 1px solid #eee; width: 140px; height: 140px; }
-        .res-canvas { width: 180px; height: 180px; }
+        .mode-selector { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn-mode { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; background: #eee; transition: 0.2s; min-width: 120px; }
+        .btn-mode.active { background: var(--blue); color: white; }
 
-        #msg { margin-top: 15px; font-weight: bold; color: #546e7a; min-height: 40px; font-size: 0.9rem; }
+        .ui-box { background: #f1f3f5; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #e0e0e0; }
+        .fraction-input { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; }
+        input { width: 60px; height: 45px; font-size: 1.4rem; text-align: center; border: 2px solid #ccc; border-radius: 10px; margin: 4px 0; }
+        .line { width: 50px; height: 4px; background: #333; border-radius: 2px; }
+
+        .op-select { font-size: 1.5rem; font-weight: bold; margin: 0 15px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; }
+
+        .viz-container { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px; margin-top: 20px; }
+        .canvas-wrap { position: relative; width: 170px; height: 170px; margin-bottom: 40px; }
+        canvas { width: 100%; height: 100%; border-radius: 50%; background: white; border: 1px solid #eee; }
+        .canvas-label { margin-top: 5px; font-weight: bold; font-size: 0.9rem; }
+        
+        #msg-aide { margin-top: 10px; padding: 15px; border-radius: 12px; background: #eef7ff; color: #0d47a1; font-weight: 500; min-height: 60px; border-left: 5px solid var(--blue); }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="tabs">
-        <button class="tab active" onclick="setMode('explore')">Exploration</button>
-        <button class="tab" onclick="setMode('add')">Addition</button>
+    <h1>Labo de Fractions</h1>
+    <p class="sub">Visualiser, comparer et opérer les fractions</p>
+
+    <div class="mode-selector">
+        <button class="btn-mode active" id="mode-comp" onclick="setMode('compare')">Comparer</button>
+        <button class="btn-mode" id="mode-add" onclick="setMode('addsub')">Addition / Soustraction</button>
+        <button class="btn-mode" id="mode-mul" onclick="setMode('muldiv')">Mult. / Division</button>
     </div>
 
-    <div id="ui-explore" class="fraction-row">
-        <div class="input-group">
-            <input type="number" id="n1" value="1">
+    <div class="ui-box">
+        <div class="fraction-input">
+            <input type="number" id="n1" value="1" oninput="draw()">
             <div class="line"></div>
-            <input type="number" id="d1" value="4">
+            <input type="number" id="d1" value="2" oninput="draw()">
+        </div>
+        
+        <select id="op-selector" class="op-select" onchange="draw()">
+            <option value="?">?</option>
+        </select>
+
+        <div class="fraction-input">
+            <input type="number" id="n2" value="1" oninput="draw()">
+            <div class="line"></div>
+            <input type="number" id="d2" value="4" oninput="draw()">
         </div>
     </div>
 
-    <div id="ui-add" class="fraction-row hidden">
-        <div class="input-group">
-            <input type="number" id="n1_add" value="1">
-            <div class="line"></div>
-            <input type="number" id="d1_add" value="2">
-        </div>
-        <div style="font-size: 1.5rem; font-weight: bold;">+</div>
-        <div class="input-group">
-            <input type="number" id="n2_add" value="1">
-            <div class="line"></div>
-            <input type="number" id="d2_add" value="4">
-        </div>
-    </div>
+    <div id="msg-aide">Ajuste les nombres pour voir le résultat.</div>
 
-    <button class="validate" onclick="run()">Vérifier et Visualiser</button>
-
-    <div id="msg">Prêt pour l'analyse !</div>
-
-    <div class="viz-area">
-        <div id="box-1">
-            <canvas id="c1" width="200" height="200"></canvas>
-            <p id="label-c1">Fraction A</p>
+    <div class="viz-container">
+        <div class="canvas-wrap">
+            <canvas id="cA" width="200" height="200"></canvas>
+            <div class="canvas-label">Fraction A</div>
         </div>
-        <div id="box-2" class="hidden">
-            <canvas id="c2" width="200" height="200"></canvas>
-            <p id="label-c2">Fraction B</p>
+        
+        <div class="canvas-wrap">
+            <canvas id="cB" width="200" height="200"></canvas>
+            <div class="canvas-label">Fraction B</div>
         </div>
-        <div id="box-res" class="hidden" style="width: 100%;">
-            <div class="line" style="background: #eee; margin: 20px 0;"></div>
-            <canvas id="cres" width="200" height="200" class="res-canvas"></canvas>
-            <p><strong>Résultat Combiné</strong></p>
+
+        <div class="canvas-wrap" id="wrap-res">
+            <canvas id="cRes" width="200" height="200"></canvas>
+            <div class="canvas-label">Résultat</div>
         </div>
     </div>
 </div>
 
 <script>
-    let mode = 'explore';
+    let currentCategory = 'compare';
 
-    function setMode(m) {
-        mode = m;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
+    function setMode(cat) {
+        currentCategory = cat;
+        // Update Buttons
+        document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+        if(cat === 'compare') document.getElementById('mode-comp').classList.add('active');
+        if(cat === 'addsub') document.getElementById('mode-add').classList.add('active');
+        if(cat === 'muldiv') document.getElementById('mode-mul').classList.add('active');
+
+        // Update Select Options
+        const sel = document.getElementById('op-selector');
+        sel.innerHTML = '';
         
-        document.getElementById('ui-explore').classList.toggle('hidden', m !== 'explore');
-        document.getElementById('ui-add').classList.toggle('hidden', m !== 'add');
-        document.getElementById('box-2').classList.toggle('hidden', m !== 'add');
-        document.getElementById('box-res').classList.toggle('hidden', m !== 'add');
+        if(cat === 'compare') {
+            sel.add(new Option('?', '?'));
+        } else if(cat === 'addsub') {
+            sel.add(new Option('+', '+'));
+            sel.add(new Option('-', '-'));
+        } else if(cat === 'muldiv') {
+            sel.add(new Option('×', '×'));
+            sel.add(new Option('÷', '÷'));
+        }
         
-        document.getElementById('msg').innerText = "Mode changé. Entre tes valeurs.";
-        clearCanvases();
+        document.getElementById('wrap-res').style.display = (cat === 'compare') ? 'none' : 'block';
+        draw();
     }
 
-    function drawPie(id, n, d, color = '#4CAF50') {
-        const c = document.getElementById(id);
-        const ctx = c.getContext('2d');
+    function drawPie(ctx, n, d, color) {
         const cx = 100, cy = 100, r = 90;
-        ctx.clearRect(0, 0, 200, 200);
+        ctx.clearRect(0,0,200,200);
+        if (d < 1) d = 1;
 
         for (let i = 0; i < d; i++) {
             ctx.beginPath();
             ctx.moveTo(cx, cy);
             ctx.arc(cx, cy, r, (i * 2 * Math.PI) / d, ((i + 1) * 2 * Math.PI) / d);
             ctx.lineTo(cx, cy);
-            ctx.fillStyle = i < n ? color : '#eceff1';
+            ctx.fillStyle = (i < n) ? color : "#f0f0f0";
             ctx.fill();
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 1.5;
             ctx.stroke();
         }
     }
 
-    function clearCanvases() {
-        ['c1', 'c2', 'cres'].forEach(id => {
-            const ctx = document.getElementById(id).getContext('2d');
-            ctx.clearRect(0,0,200,200);
-        });
-    }
+    function draw() {
+        const n1 = parseInt(document.getElementById('n1').value) || 0;
+        const d1 = parseInt(document.getElementById('d1').value) || 1;
+        const n2 = parseInt(document.getElementById('n2').value) || 0;
+        const d2 = parseInt(document.getElementById('d2').value) || 1;
+        const op = document.getElementById('op-selector').value;
+        const aide = document.getElementById('msg-aide');
 
-    function run() {
-        const msg = document.getElementById('msg');
-        
-        if (mode === 'explore') {
-            const n = parseInt(document.getElementById('n1').value);
-            const d = parseInt(document.getElementById('d1').value);
-            drawPie('c1', n, d);
-            msg.innerHTML = `Visualisation de ${n}/${d}.<br>Chaque part vaut 1/${d} du cercle.`;
-        } else {
-            const n1 = parseInt(document.getElementById('n1_add').value);
-            const d1 = parseInt(document.getElementById('d1_add').value);
-            const n2 = parseInt(document.getElementById('n2_add').value);
-            const d2 = parseInt(document.getElementById('d2_add').value);
+        const ctxA = document.getElementById('cA').getContext('2d');
+        const ctxB = document.getElementById('cB').getContext('2d');
+        const ctxRes = document.getElementById('cRes').getContext('2d');
 
-            drawPie('c1', n1, d1, '#2196F3');
-            drawPie('c2', n2, d2, '#FF9800');
+        drawPie(ctxA, n1, d1, '#2196F3');
+        drawPie(ctxB, n2, d2, '#FF9800');
 
+        if (currentCategory === 'compare') {
+            const v1 = n1/d1; const v2 = n2/d2;
+            if (v1 > v2) aide.innerText = "La fraction A occupe plus d'espace.";
+            else if (v1 < v2) aide.innerText = "La fraction B occupe plus d'espace.";
+            else aide.innerText = "Les deux surfaces sont égales !";
+        } 
+        else if (currentCategory === 'addsub') {
             if (d1 !== d2) {
-                msg.innerHTML = `<span style="color: #d32f2f;">Incompatible !</span><br>Les morceaux n'ont pas la même taille (${d1} vs ${d2}). Trouve un dénominateur commun.`;
-                document.getElementById('cres').getContext('2d').clearRect(0,0,200,200);
+                aide.innerHTML = "⚠️ <strong>Attention :</strong> On ne peut additionner ou soustraire que des morceaux de même taille (dénominateur identique).";
+                ctxRes.clearRect(0,0,200,200);
             } else {
-                const resN = n1 + n2;
-                drawPie('cres', resN, d1, '#9C27B0');
-                msg.innerHTML = `<span style="color: #388E3C;">Réussi !</span><br>Comme les parts sont identiques, on peut les additionner : ${n1} + ${n2} = ${resN} parts de taille 1/${d1}.`;
+                let resN = (op === '+') ? n1 + n2 : n1 - n2;
+                if (resN < 0) {
+                    aide.innerText = "Le résultat est négatif (en dessous de zéro).";
+                    ctxRes.clearRect(0,0,200,200);
+                } else {
+                    drawPie(ctxRes, resN, d1, '#4CAF50');
+                    aide.innerText = `On manipule les morceaux : ${n1} ${op} ${n2} = ${resN} morceaux de taille 1/${d1}.`;
+                }
+            }
+        }
+        else if (currentCategory === 'muldiv') {
+            if (op === '×') {
+                drawPie(ctxRes, n1*n2, d1*d2, '#9C27B0');
+                aide.innerHTML = `<strong>Multiplication :</strong> Chaque morceau de A est recoupé par B. On obtient ${n1*n2} petites parts sur ${d1*d2}.`;
+            } else {
+                // Division simplifiée visuellement
+                const resN = n1 * d2;
+                const resD = d1 * n2;
+                drawPie(ctxRes, resN, resD, '#E91E63');
+                aide.innerHTML = `<strong>Division :</strong> On cherche combien de fois B rentre dans A. Le résultat visuel est ${resN}/${resD}.`;
             }
         }
     }
 
     // Init
-    run();
+    setMode('compare');
 </script>
-
 </body>
 </html>
