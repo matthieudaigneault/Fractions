@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labo de Fractions d'André</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #eceff1; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .container { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); width: 95%; max-width: 500px; text-align: center; }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 10px; background: #cfd8dc; border-radius: 8px; cursor: pointer; font-weight: bold; border: none; }
+        .tab.active { background: #2196F3; color: white; }
+
+        .fraction-row { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .input-group { display: flex; flex-direction: column; align-items: center; }
+        input { width: 50px; padding: 8px; font-size: 1.2rem; text-align: center; border: 2px solid #ddd; border-radius: 8px; }
+        .line { width: 100%; height: 3px; background: #37474f; margin: 5px 0; }
+        
+        button.validate { background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        .viz-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px; }
+        canvas { background: #fdfdfd; border-radius: 50%; border: 1px solid #eee; width: 140px; height: 140px; }
+        .res-canvas { width: 180px; height: 180px; }
+
+        #msg { margin-top: 15px; font-weight: bold; color: #546e7a; min-height: 40px; font-size: 0.9rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab active" onclick="setMode('explore')">Exploration</button>
+        <button class="tab" onclick="setMode('add')">Addition</button>
+    </div>
+
+    <div id="ui-explore" class="fraction-row">
+        <div class="input-group">
+            <input type="number" id="n1" value="1">
+            <div class="line"></div>
+            <input type="number" id="d1" value="4">
+        </div>
+    </div>
+
+    <div id="ui-add" class="fraction-row hidden">
+        <div class="input-group">
+            <input type="number" id="n1_add" value="1">
+            <div class="line"></div>
+            <input type="number" id="d1_add" value="2">
+        </div>
+        <div style="font-size: 1.5rem; font-weight: bold;">+</div>
+        <div class="input-group">
+            <input type="number" id="n2_add" value="1">
+            <div class="line"></div>
+            <input type="number" id="d2_add" value="4">
+        </div>
+    </div>
+
+    <button class="validate" onclick="run()">Vérifier et Visualiser</button>
+
+    <div id="msg">Prêt pour l'analyse !</div>
+
+    <div class="viz-area">
+        <div id="box-1">
+            <canvas id="c1" width="200" height="200"></canvas>
+            <p id="label-c1">Fraction A</p>
+        </div>
+        <div id="box-2" class="hidden">
+            <canvas id="c2" width="200" height="200"></canvas>
+            <p id="label-c2">Fraction B</p>
+        </div>
+        <div id="box-res" class="hidden" style="width: 100%;">
+            <div class="line" style="background: #eee; margin: 20px 0;"></div>
+            <canvas id="cres" width="200" height="200" class="res-canvas"></canvas>
+            <p><strong>Résultat Combiné</strong></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let mode = 'explore';
+
+    function setMode(m) {
+        mode = m;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        document.getElementById('ui-explore').classList.toggle('hidden', m !== 'explore');
+        document.getElementById('ui-add').classList.toggle('hidden', m !== 'add');
+        document.getElementById('box-2').classList.toggle('hidden', m !== 'add');
+        document.getElementById('box-res').classList.toggle('hidden', m !== 'add');
+        
+        document.getElementById('msg').innerText = "Mode changé. Entre tes valeurs.";
+        clearCanvases();
+    }
+
+    function drawPie(id, n, d, color = '#4CAF50') {
+        const c = document.getElementById(id);
+        const ctx = c.getContext('2d');
+        const cx = 100, cy = 100, r = 90;
+        ctx.clearRect(0, 0, 200, 200);
+
+        for (let i = 0; i < d; i++) {
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, (i * 2 * Math.PI) / d, ((i + 1) * 2 * Math.PI) / d);
+            ctx.lineTo(cx, cy);
+            ctx.fillStyle = i < n ? color : '#eceff1';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    }
+
+    function clearCanvases() {
+        ['c1', 'c2', 'cres'].forEach(id => {
+            const ctx = document.getElementById(id).getContext('2d');
+            ctx.clearRect(0,0,200,200);
+        });
+    }
+
+    function run() {
+        const msg = document.getElementById('msg');
+        
+        if (mode === 'explore') {
+            const n = parseInt(document.getElementById('n1').value);
+            const d = parseInt(document.getElementById('d1').value);
+            drawPie('c1', n, d);
+            msg.innerHTML = `Visualisation de ${n}/${d}.<br>Chaque part vaut 1/${d} du cercle.`;
+        } else {
+            const n1 = parseInt(document.getElementById('n1_add').value);
+            const d1 = parseInt(document.getElementById('d1_add').value);
+            const n2 = parseInt(document.getElementById('n2_add').value);
+            const d2 = parseInt(document.getElementById('d2_add').value);
+
+            drawPie('c1', n1, d1, '#2196F3');
+            drawPie('c2', n2, d2, '#FF9800');
+
+            if (d1 !== d2) {
+                msg.innerHTML = `<span style="color: #d32f2f;">Incompatible !</span><br>Les morceaux n'ont pas la même taille (${d1} vs ${d2}). Trouve un dénominateur commun.`;
+                document.getElementById('cres').getContext('2d').clearRect(0,0,200,200);
+            } else {
+                const resN = n1 + n2;
+                drawPie('cres', resN, d1, '#9C27B0');
+                msg.innerHTML = `<span style="color: #388E3C;">Réussi !</span><br>Comme les parts sont identiques, on peut les additionner : ${n1} + ${n2} = ${resN} parts de taille 1/${d1}.`;
+            }
+        }
+    }
+
+    // Init
+    run();
+</script>
+
+</body>
+</html>
